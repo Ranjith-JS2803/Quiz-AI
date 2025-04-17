@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Quiz</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/6.0.3/docx.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f7fa;
+            position: relative;
+        }
+        h1 {
+            color: #333;
+        }
+        .quiz-box {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .option {
+            margin: 5px 0;
+            display: block; 
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+        #downloadBtn, #homeBtn {
+            padding: 10px 15px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        #downloadBtn {
+            background: #28a745;
+        }
+
+        #downloadBtn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        #homeBtn {
+            background: #007bff;
+        }
+
+        #homeBtn:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 9999;
+            left: 50%;
+            bottom: 30px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        .disabled-btn {
+            opacity: 0.5;
+            pointer-events: all;
+            cursor: not-allowed;
+        }
+        .top-right-btns {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<h1>Quiz: <span id="quiz-title"></span></h1>
+<div class="top-right-btns">
+    <a href="/" id="homeBtn">Home</a>
+    <button id="downloadBtn" class="disabled-btn">Download Quiz</button>
+</div>
+<div id="toast" class="toast">Can be downloaded only upon submission</div>
+<div id="quiz-container"></div>
+<button class="submit-btn" onclick="calculateResult()">Submit</button>
+<div class="result" id="result"></div>
+
+<script>
+    let quizData = [];
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    fetch('/quiz_data/{{ dir_name }}')
+        .then(response => response.json())
+        .then(data => {
+            quizData = data;
+
+            document.getElementById('quiz-title').innerText = quizData[0].title;
+
+            const quizContainer = document.getElementById('quiz-container');
+
+            quizData.slice(1).forEach((item, index) => {
+                const qBox = document.createElement('div');
+                qBox.className = 'quiz-box';
+
+                const q = document.createElement('div');
+                q.className = 'question';
+                q.innerText = `${index + 1}. ${item.question}`;
+                qBox.appendChild(q);
+
+                if (item.type === "MCQ" || item.type === "MSQ") {
+                    item.options.forEach((opt, optIndex) => {
+                        const input = document.createElement('input');
+                        input.type = item.type === "MCQ" ? 'radio' : 'checkbox';
+                        input.name = `q${index}`;
+                        input.value = opt;
+                        input.className = 'option-input';
+
+                        const label = document.createElement('label');
+                        label.innerText = opt;
+                        label.className = 'option';
+                        label.prepend(input);
+
+                        qBox.appendChild(label);
+                    });
+                } else if (item.type === "NAT") {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = `q${index}`;
+                    input.className = 'option-input';
+                    qBox.appendChild(input);
+                }
+
+                quizContainer.appendChild(qBox);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching quiz data:', error);
+            alert('There was an error loading the quiz data.');
+        });
+
+        function calculateResult() {
+            const userAnswers = {};
+            let score = 0;
+            let totalQuestions = quizData.length - 1; // Exclude title
+
+            quizData.slice(1).forEach((item, index) => {
+                const qName = `q${index}`;
+                const selectedOptions = [];
+                const qBox = document.getElementsByClassName('quiz-box')[index]; // Target box
+
+                let isCorrect = false;
+
+                if (item.type === "MCQ" || item.type === "MSQ") {
+                    const options = document.getElementsByName(qName);
+                    options.forEach((option) => {
+                        if (option.checked) {
+                            selectedOptions.push(option.value);
+                        }
+                    });
+                    userAnswers[qName] = selectedOptions;
+                } else if (item.type === "NAT") {
+                    const answerInput = document.querySelector(`[name="${qName}"]`);
+                    userAnswers[qName] = answerInput.value;
+                }
+
+                const correctAnswer = item.answer;
+                if (item.type === "MCQ" || item.type === "MSQ") {
+                    if (Array.isArray(correctAnswer)) {
+                        if (JSON.stringify(selectedOptions.sort()) === JSON.stringify(correctAnswer.sort())) {
+                            score++;
+                            isCorrect = true;
+                        }
+                    } else {
+                        if (selectedOptions[0] === correctAnswer) {
+                            score++;
+                            isCorrect = true;
+                        }
+                    }
+                } else if (item.type === "NAT") {
+                    if (String(userAnswers[qName]) === String(correctAnswer)) {
+                        score++;
+                        isCorrect = true;
+                    }
+                }
+
+                qBox.style.backgroundColor = isCorrect ? "#eaffea" : "#ffe6e6";
+            });
+
+            const percentage = (score / totalQuestions) * 100;
+            document.getElementById('result').innerText = `Score: ${score}/${totalQuestions} (${percentage.toFixed(2)}%)`;
+            downloadBtn.classList.remove('disabled-btn');
+        }
+        // const downloadBtn = document.getElementById('downloadBtn');
+        
+        downloadBtn.addEventListener('click', () => {
+            if (downloadBtn.classList.contains('disabled-btn')) {
+                showToast('Can be downloaded only upon submission');
+            } else {
+                const dirName = "{{ dir_name }}";
+                window.open(`/download_quiz/${dirName}`, '_blank');
+            }
+        });      
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
+        }
+</script>
+</body>
+</html>

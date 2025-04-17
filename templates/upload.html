@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 420px;
+        }
+        h1 {
+            color: #004d4d;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-shadow: 0 0 10px rgba(0, 128, 128, 0.3);
+            animation: glowText 1.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowText {
+            from {
+                text-shadow: 0 0 10px rgba(0, 128, 128, 0.4);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(0, 128, 128, 0.8);
+            }
+        }
+
+        .upload-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f9f9f9;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+
+        label {
+            font-size: 16px;
+            color: #333;
+        }
+
+        input[type="file"] {
+            border: none;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+            width: 100%;
+            margin-top: 15px;
+            animation: pulseBtn 2s infinite;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background-color: grey;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulseBtn {
+            0% {
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(0, 123, 255, 1);
+            }
+            100% {
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+            }
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .video-upload-group {
+            display: none;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #3498db;
+        }
+
+        .spinner {
+            margin: 0 auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your Files</h1>
+
+        <form method="POST" enctype="multipart/form-data" id="upload-form" action="/upload">
+            <div class="upload-group">
+                <label for="document-input">Document File:</label>
+                <input type="file" name="document_file" id="document-input" accept=".doc,.docx,.pdf,.txt">
+            </div>
+
+            <div class="toggle-container">
+                <label class="toggle-label">Enable Video Upload:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-video">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="video-upload-group" id="video-upload-group">
+                <div class="upload-group">
+                    <label for="video-input">Video File:</label>
+                    <input type="file" name="video_file" id="video-input" accept="video/*">
+                </div>
+            </div>
+
+            <button type="submit" id="submit-button">Create Quiz</button>
+        </form>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Please wait, processing your upload...</p>
+        </div>
+    </div>  
+
+    <script>
+        const toggleVideo = document.getElementById("toggle-video");
+        const videoUploadGroup = document.getElementById("video-upload-group");
+        const loadingIndicator = document.getElementById("loading");
+        const submitButton = document.getElementById("submit-button");
+        const uploadForm = document.getElementById("upload-form");
+        const documentInput = document.getElementById("document-input");
+    
+        toggleVideo.addEventListener("change", function () {
+            videoUploadGroup.style.display = toggleVideo.checked ? "block" : "none";
+    
+            if (toggleVideo.checked) {
+                documentInput.removeAttribute('required');
+            } else {
+                documentInput.setAttribute('required', 'required');
+            }
+        });
+    
+        uploadForm.addEventListener("submit", function (e) {
+            const isVideoEnabled = toggleVideo.checked;
+            const isDocumentUploaded = documentInput.files.length > 0;
+    
+            if (!isVideoEnabled && !isDocumentUploaded) {
+                e.preventDefault();
+                alert('Please upload a document file, or enable video upload to proceed without it.');
+                return;
+            }
+    
+            submitButton.disabled = true;
+            loadingIndicator.style.display = "block";
+        });
+    </script>
+</body>
+</html>

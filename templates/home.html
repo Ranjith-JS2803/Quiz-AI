@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz AI - Home</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 30px;
+            background: #e0f7f7;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            color: #004d4d;
+            text-shadow: 0 0 10px rgba(0, 128, 128, 0.4);
+            animation: glowText 2s infinite alternate;
+        }
+
+        @keyframes glowText {
+            from {
+                text-shadow: 0 0 10px rgba(0, 128, 128, 0.4);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(0, 128, 128, 0.9);
+            }
+        }
+
+        .upload-btn-container {
+            margin-bottom: 30px;
+        }
+
+        .upload-btn {
+            padding: 10px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+            animation: pulseBtn 1.5s infinite;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .upload-btn:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+        @keyframes pulseBtn {
+            0% {
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(0, 123, 255, 1);
+            }
+            100% {
+                box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+            }
+        }
+
+        .quiz-list {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .quiz-item {
+            background: #fff;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+
+        .quiz-item a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📚 Available Quizzes</h1>
+    <br><br>
+
+    <div class="upload-btn-container">
+        <a href="/upload"><button class="upload-btn">Upload & Create New Quiz</button></a>
+    </div>
+
+    <ul class="quiz-list">
+        {% for quiz in quizzes_list %}
+            <li class="quiz-item">
+                <a href="/quiz/{{ quiz.dir_name }}">{{ quiz.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
