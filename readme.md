@@ -3,28 +3,42 @@
 This project is a web-based application that uses AI to generate and transcribe quizzes. It allows users to upload files, generate quiz questions, and transcribe audio into text.
 
 ## Project Structure
-quiz-ai-app/
-├── app.py                   
-├── config.yml               
-├── requirements.txt         
-├── quiz_ai/                 
-│   ├── __init__.py          
-│   ├── constants.py         
-│   ├── generate.py          
-│   ├── transcribe.py        
-│   └── __pycache__/         
-├── quizEnv/                 
-│   ├── pyvenv.cfg
-│   ├── Include/
-│   ├── Lib/
-│   └── Scripts/
-├── templates/               
-│   ├── home.html
-│   ├── quiz.html
-│   └── upload.html
-├── uploads/                 
-│   └── <UUID>/              
-└── README.md                
+
+This repository is structured as follows:
+
+- **`app.py`**  
+  Entry point of the Flask application.
+
+- **`config.yml`**  
+  Contains configuration settings for the app.
+
+- **`requirements.txt`**  
+  Lists Python dependencies required to run the project.
+
+- **`README.md`**  
+  Documentation for understanding and setting up the project.
+
+### `quiz_ai/` – Core Backend Logic
+- **`__init__.py`**  
+  Initializes the Python package.
+- **`constants.py`**  
+  Defines constant values used throughout the application.
+- **`generate.py`**  
+  Handles quiz generation from transcripts.
+- **`transcribe.py`**  
+  Manages transcription of uploaded audio or video.
+
+### `templates/` – HTML Templates
+- **`home.html`**  
+  The landing page of the application.
+- **`quiz.html`**  
+  Displays the generated quiz content.
+- **`upload.html`**  
+  UI for uploading media or documents.
+
+### `uploads/` – User Uploads
+- **`<UUID>/`**  
+  Stores uploaded files in session-specific folders using UUIDs.               
 
 ## Features
 
